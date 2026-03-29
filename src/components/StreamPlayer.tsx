@@ -7,7 +7,7 @@ interface StreamPlayerProps {
   isLive: boolean;
 }
 
-export function StreamPlayer({ youtubeUrl, isLive, hidden }: StreamPlayerProps) {
+export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
   const videoId = extractYoutubeVideoId(youtubeUrl);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
