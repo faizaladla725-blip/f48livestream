@@ -62,7 +62,7 @@ export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
     <div ref={containerRef} className="aspect-video bg-stream rounded-lg overflow-hidden relative group">
       <iframe
         ref={iframeRef}
-        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=0&fs=0&controls=1&playsinline=1`}
+        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1`}
         className="w-full h-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
