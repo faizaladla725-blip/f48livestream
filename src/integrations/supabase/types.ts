@@ -96,6 +96,7 @@ export type Database = {
           created_at: string
           device_id: string
           id: string
+          is_banned: boolean
           is_online: boolean
           last_seen: string
           username: string
@@ -104,6 +105,7 @@ export type Database = {
           created_at?: string
           device_id: string
           id?: string
+          is_banned?: boolean
           is_online?: boolean
           last_seen?: string
           username: string
@@ -112,6 +114,7 @@ export type Database = {
           created_at?: string
           device_id?: string
           id?: string
+          is_banned?: boolean
           is_online?: boolean
           last_seen?: string
           username?: string
