@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -97,7 +97,7 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
         <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{messages.length}</span>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         {messages.length === 0 && (
           <p className="text-center text-muted-foreground text-xs py-12">
             Belum ada pesan. Mulai ngobrol!
@@ -142,5 +142,3 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
     </div>
   );
 }
-
-import { useRef } from 'react';
