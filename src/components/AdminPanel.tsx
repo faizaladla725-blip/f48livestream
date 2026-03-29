@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { LogOut, Users, Settings, Tv } from 'lucide-react';
+import { LogOut, Users, Settings, Tv, Ban, ShieldCheck } from 'lucide-react';
 
 interface StreamSetting {
   id: string;
@@ -16,6 +16,7 @@ interface Viewer {
   id: string;
   username: string;
   is_online: boolean;
+  is_banned: boolean;
   last_seen: string;
 }
 
@@ -46,12 +47,17 @@ export function AdminPanel() {
     fetchServers();
   };
 
+  const toggleBan = async (viewerId: string, currentBanned: boolean) => {
+    await supabase.from('viewers').update({ is_banned: !currentBanned }).eq('id', viewerId);
+    fetchViewers();
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
   };
 
-  const onlineCount = viewers.filter(v => v.is_online).length;
+  const onlineCount = viewers.filter(v => v.is_online && !v.is_banned).length;
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -119,12 +125,32 @@ export function AdminPanel() {
             {viewers.map((viewer) => (
               <div key={viewer.id} className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${viewer.is_online ? 'bg-online' : 'bg-muted-foreground'}`} />
-                  <span className="text-sm font-medium text-foreground">{viewer.username}</span>
+                  <span className={`w-2 h-2 rounded-full ${viewer.is_banned ? 'bg-destructive' : viewer.is_online ? 'bg-online' : 'bg-muted-foreground'}`} />
+                  <span className={`text-sm font-medium ${viewer.is_banned ? 'text-destructive line-through' : 'text-foreground'}`}>
+                    {viewer.username}
+                  </span>
+                  {viewer.is_banned && (
+                    <span className="text-[10px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded font-heading">BANNED</span>
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {viewer.is_online ? 'Online' : new Date(viewer.last_seen).toLocaleTimeString('id-ID')}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {viewer.is_online ? 'Online' : new Date(viewer.last_seen).toLocaleTimeString('id-ID')}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => toggleBan(viewer.id, viewer.is_banned)}
+                    title={viewer.is_banned ? 'Unban' : 'Ban'}
+                  >
+                    {viewer.is_banned ? (
+                      <ShieldCheck className="w-3.5 h-3.5 text-online" />
+                    ) : (
+                      <Ban className="w-3.5 h-3.5 text-destructive" />
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
