@@ -1,16 +1,85 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from 'react';
+import { useViewer } from '@/hooks/useViewer';
+import { LoginPage } from '@/components/LoginPage';
+import { AdminLogin } from '@/components/AdminLogin';
+import { StreamPage } from '@/components/StreamPage';
+import { AdminPanel } from '@/components/AdminPanel';
+import { supabase } from '@/integrations/supabase/client';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type View = 'login' | 'admin-login' | 'stream' | 'admin-panel';
+
+const Index = () => {
+  const { viewer, loading, login, logout } = useViewer();
+  const [view, setView] = useState<View>('login');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check if admin is already logged in
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .then(({ data }) => {
+            if (data && data.length > 0) {
+              setIsAdmin(true);
+            }
+          });
+      } else {
+        setIsAdmin(false);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!loading && viewer) {
+      setView('stream');
+    }
+  }, [loading, viewer]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground font-heading">Loading...</p>
+      </div>
+    );
+  }
+
+  if (view === 'admin-panel') {
+    return <AdminPanel />;
+  }
+
+  if (view === 'admin-login') {
+    return (
+      <AdminLogin
+        onBack={() => setView('login')}
+        onSuccess={() => setView('admin-panel')}
+      />
+    );
+  }
+
+  if (view === 'stream' && viewer) {
+    return (
+      <StreamPage
+        viewerId={viewer.id}
+        username={viewer.username}
+        onLogout={() => { logout(); setView('login'); }}
+        onAdminClick={isAdmin ? () => setView('admin-panel') : undefined}
+      />
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <LoginPage
+      onLogin={async (username) => {
+        await login(username);
+        setView('stream');
+      }}
+      onAdminClick={() => setView('admin-login')}
+    />
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
