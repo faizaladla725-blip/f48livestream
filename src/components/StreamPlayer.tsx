@@ -50,7 +50,7 @@ export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
 
   if (!videoId) {
     return (
-      <div className={`aspect-video bg-stream rounded-lg flex flex-col items-center justify-center gap-3 ${hidden ? 'hidden' : ''}`}>
+      <div className="aspect-video bg-stream rounded-lg flex flex-col items-center justify-center gap-3">
         <Tv className="w-12 h-12 text-muted-foreground" />
         <p className="text-foreground font-heading text-lg">Stream Offline</p>
         <p className="text-muted-foreground text-sm">Menunggu siaran dimulai...</p>
