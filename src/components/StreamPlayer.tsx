@@ -5,7 +5,6 @@ import { Tv, Maximize, PictureInPicture2 } from 'lucide-react';
 interface StreamPlayerProps {
   youtubeUrl: string;
   isLive: boolean;
-  hidden?: boolean;
 }
 
 export function StreamPlayer({ youtubeUrl, isLive, hidden }: StreamPlayerProps) {
