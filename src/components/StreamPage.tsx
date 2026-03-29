@@ -84,20 +84,26 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
           />
         </div>
 
-        {/* Stream */}
+        {/* Stream - render all servers, hide inactive to preserve playback */}
         <div className="px-4 space-y-3 pb-4">
-          {activeServer ? (
+          {servers.length > 0 ? (
             <>
-              <StreamPlayer
-                youtubeUrl={activeServer.youtube_url || ''}
-                isLive={activeServer.is_live}
-              />
-              <ViewerInfo
-                stream={{
-                  serverName: activeServer.server_name,
-                  isLive: activeServer.is_live,
-                }}
-              />
+              {servers.map(server => (
+                <StreamPlayer
+                  key={server.id}
+                  youtubeUrl={server.youtube_url || ''}
+                  isLive={server.is_live}
+                  hidden={server.id !== activeServerId}
+                />
+              ))}
+              {activeServer && (
+                <ViewerInfo
+                  stream={{
+                    serverName: activeServer.server_name,
+                    isLive: activeServer.is_live,
+                  }}
+                />
+              )}
             </>
           ) : (
             <div className="aspect-video bg-stream rounded-lg flex items-center justify-center">
