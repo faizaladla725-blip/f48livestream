@@ -13,13 +13,31 @@ interface Viewer {
 export function useViewer() {
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [banned, setBanned] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(VIEWER_KEY);
     if (stored) {
-      setViewer(JSON.parse(stored));
+      const parsed = JSON.parse(stored);
+      // Check if banned
+      supabase
+        .from('viewers')
+        .select('is_banned')
+        .eq('id', parsed.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.is_banned) {
+            setBanned(true);
+            localStorage.removeItem(VIEWER_KEY);
+            setViewer(null);
+          } else {
+            setViewer(parsed);
+          }
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (username: string) => {
@@ -33,7 +51,11 @@ export function useViewer() {
       .maybeSingle();
 
     if (existing) {
-      // Update username and set online
+      if (existing.is_banned) {
+        setBanned(true);
+        throw new Error('Akun kamu telah di-banned oleh admin');
+      }
+
       await supabase
         .from('viewers')
         .update({ username, is_online: true, last_seen: new Date().toISOString() })
@@ -45,7 +67,6 @@ export function useViewer() {
       return v;
     }
 
-    // New device
     const { data, error } = await supabase
       .from('viewers')
       .insert({ username, device_id: deviceId, is_online: true })
@@ -72,7 +93,6 @@ export function useViewer() {
     setViewer(null);
   };
 
-  // Heartbeat - keep online
   useEffect(() => {
     if (!viewer) return;
     const interval = setInterval(() => {
@@ -85,5 +105,5 @@ export function useViewer() {
     return () => clearInterval(interval);
   }, [viewer]);
 
-  return { viewer, loading, login, logout };
+  return { viewer, loading, login, logout, banned };
 }

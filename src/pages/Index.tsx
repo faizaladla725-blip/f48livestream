@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 type View = 'login' | 'admin-login' | 'stream' | 'admin-panel';
 
 const Index = () => {
-  const { viewer, loading, login, logout } = useViewer();
+  const { viewer, loading, login, logout, banned } = useViewer();
   const [view, setView] = useState<View>('login');
   const [isAdmin, setIsAdmin] = useState(false);
 
