@@ -5,10 +5,9 @@ import { Tv, Maximize, PictureInPicture2 } from 'lucide-react';
 interface StreamPlayerProps {
   youtubeUrl: string;
   isLive: boolean;
-  hidden?: boolean;
 }
 
-export function StreamPlayer({ youtubeUrl, isLive, hidden }: StreamPlayerProps) {
+export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
   const videoId = extractYoutubeVideoId(youtubeUrl);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -51,7 +50,7 @@ export function StreamPlayer({ youtubeUrl, isLive, hidden }: StreamPlayerProps) 
 
   if (!videoId) {
     return (
-      <div className={`aspect-video bg-stream rounded-lg flex flex-col items-center justify-center gap-3 ${hidden ? 'hidden' : ''}`}>
+      <div className="aspect-video bg-stream rounded-lg flex flex-col items-center justify-center gap-3">
         <Tv className="w-12 h-12 text-muted-foreground" />
         <p className="text-foreground font-heading text-lg">Stream Offline</p>
         <p className="text-muted-foreground text-sm">Menunggu siaran dimulai...</p>
@@ -60,7 +59,7 @@ export function StreamPlayer({ youtubeUrl, isLive, hidden }: StreamPlayerProps) 
   }
 
   return (
-    <div ref={containerRef} className={`aspect-video bg-stream rounded-lg overflow-hidden relative group ${hidden ? 'hidden' : ''}`}>
+    <div ref={containerRef} className="aspect-video bg-stream rounded-lg overflow-hidden relative group">
       <iframe
         ref={iframeRef}
         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=0&fs=0&controls=1&playsinline=1`}
