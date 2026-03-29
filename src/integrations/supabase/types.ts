@@ -55,6 +55,7 @@ export type Database = {
       }
       stream_settings: {
         Row: {
+          access_code: string | null
           created_at: string
           id: string
           is_live: boolean
@@ -63,6 +64,7 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          access_code?: string | null
           created_at?: string
           id?: string
           is_live?: boolean
@@ -71,6 +73,7 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          access_code?: string | null
           created_at?: string
           id?: string
           is_live?: boolean
