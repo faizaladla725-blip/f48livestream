@@ -21,7 +21,7 @@ interface StreamPageProps {
   isAdmin?: boolean;
 }
 
-export function StreamPage({ viewerId, username, onLogout, onAdminClick }: StreamPageProps) {
+export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin }: StreamPageProps) {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [activeServerId, setActiveServerId] = useState('');
 
