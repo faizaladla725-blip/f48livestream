@@ -105,7 +105,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
             </div>
           )}
 
-          <LiveChat viewerId={viewerId} username={username} />
+          <LiveChat viewerId={viewerId} username={username} isAdmin={isAdmin} />
         </div>
       </div>
     </div>
