@@ -99,6 +99,7 @@ export type Database = {
           is_banned: boolean
           is_online: boolean
           last_seen: string
+          session_token: string | null
           username: string
         }
         Insert: {
@@ -108,6 +109,7 @@ export type Database = {
           is_banned?: boolean
           is_online?: boolean
           last_seen?: string
+          session_token?: string | null
           username: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           is_banned?: boolean
           is_online?: boolean
           last_seen?: string
+          session_token?: string | null
           username?: string
         }
         Relationships: []

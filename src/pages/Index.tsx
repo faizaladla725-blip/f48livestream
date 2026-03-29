@@ -67,6 +67,7 @@ const Index = () => {
         username={viewer.username}
         onLogout={() => { logout(); setView('login'); }}
         onAdminClick={isAdmin ? () => setView('admin-panel') : undefined}
+        isAdmin={isAdmin}
       />
     );
   }

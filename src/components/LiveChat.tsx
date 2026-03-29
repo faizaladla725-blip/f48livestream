@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Send, Trash2 } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -14,16 +14,16 @@ interface ChatMessage {
 interface LiveChatProps {
   viewerId: string;
   username: string;
+  isAdmin?: boolean;
 }
 
-export function LiveChat({ viewerId, username }: LiveChatProps) {
+export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load initial messages
     supabase
       .from('chat_messages')
       .select('*')
@@ -33,7 +33,6 @@ export function LiveChat({ viewerId, username }: LiveChatProps) {
         if (data) setMessages(data as ChatMessage[]);
       });
 
-    // Subscribe to new messages
     const channel = supabase
       .channel('chat')
       .on('postgres_changes', {
@@ -42,6 +41,13 @@ export function LiveChat({ viewerId, username }: LiveChatProps) {
         table: 'chat_messages',
       }, (payload) => {
         setMessages(prev => [...prev, payload.new as ChatMessage]);
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'chat_messages',
+      }, (payload) => {
+        setMessages(prev => prev.filter(m => m.id !== (payload.old as any).id));
       })
       .subscribe();
 
@@ -65,6 +71,10 @@ export function LiveChat({ viewerId, username }: LiveChatProps) {
     setSending(false);
   };
 
+  const deleteMessage = async (msgId: string) => {
+    await supabase.from('chat_messages').delete().eq('id', msgId);
+  };
+
   return (
     <div className="bg-card rounded-lg border border-border flex flex-col" style={{ height: '350px' }}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -79,9 +89,19 @@ export function LiveChat({ viewerId, username }: LiveChatProps) {
           </p>
         )}
         {messages.map((msg) => (
-          <div key={msg.id} className="text-sm">
-            <span className="font-semibold text-primary mr-1.5">{msg.username}</span>
-            <span className="text-foreground">{msg.message}</span>
+          <div key={msg.id} className="text-sm flex items-start justify-between group">
+            <div>
+              <span className="font-semibold text-primary mr-1.5">{msg.username}</span>
+              <span className="text-foreground">{msg.message}</span>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={() => deleteMessage(msg.id)}
+                className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-opacity ml-2 shrink-0 mt-0.5"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
           </div>
         ))}
       </div>

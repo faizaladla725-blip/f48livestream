@@ -18,9 +18,10 @@ interface StreamPageProps {
   username: string;
   onLogout: () => void;
   onAdminClick?: () => void;
+  isAdmin?: boolean;
 }
 
-export function StreamPage({ viewerId, username, onLogout, onAdminClick }: StreamPageProps) {
+export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin }: StreamPageProps) {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [activeServerId, setActiveServerId] = useState('');
 
@@ -104,7 +105,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick }: Strea
             </div>
           )}
 
-          <LiveChat viewerId={viewerId} username={username} />
+          <LiveChat viewerId={viewerId} username={username} isAdmin={isAdmin} />
         </div>
       </div>
     </div>
