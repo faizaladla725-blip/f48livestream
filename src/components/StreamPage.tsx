@@ -18,6 +18,7 @@ interface StreamPageProps {
   username: string;
   onLogout: () => void;
   onAdminClick?: () => void;
+  isAdmin?: boolean;
 }
 
 export function StreamPage({ viewerId, username, onLogout, onAdminClick }: StreamPageProps) {
