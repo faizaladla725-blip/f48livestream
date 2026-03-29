@@ -36,7 +36,6 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
 
     fetchServers();
 
-    // Subscribe to changes
     const channel = supabase
       .channel('stream_settings')
       .on('postgres_changes', {
@@ -57,26 +56,33 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
     <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Tv className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-heading font-bold text-foreground">FOUR48</h1>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
+              <Tv className="w-4 h-4 text-primary" />
+            </div>
+            <h1 className="text-base font-heading font-bold text-foreground tracking-tight">FOUR48</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Hai, <span className="text-foreground font-medium">{username}</span></span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-secondary/50 rounded-full px-3 py-1">
+              <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-[9px] font-bold text-primary">{username[0]?.toUpperCase()}</span>
+              </div>
+              <span className="text-xs text-foreground font-medium">{username}</span>
+            </div>
             {onAdminClick && (
-              <button onClick={onAdminClick} className="text-muted-foreground hover:text-foreground transition-colors">
-                <Settings className="w-4 h-4" />
+              <button onClick={onAdminClick} className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <Settings className="w-3.5 h-3.5" />
               </button>
             )}
-            <button onClick={onLogout} className="text-muted-foreground hover:text-foreground transition-colors">
-              <LogOut className="w-4 h-4" />
+            <button onClick={onLogout} className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         {/* Server tabs */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pt-3 pb-2">
           <ServerTabs
             servers={servers}
             activeServer={activeServerId}
@@ -84,7 +90,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
           />
         </div>
 
-        {/* Stream - only render active server to prevent audio collision */}
+        {/* Stream */}
         <div className="px-4 space-y-3 pb-4">
           {activeServer ? (
             <>
@@ -100,8 +106,11 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
               />
             </>
           ) : (
-            <div className="aspect-video bg-stream rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Loading...</p>
+            <div className="aspect-video bg-stream rounded-xl flex items-center justify-center">
+              <div className="text-center">
+                <Tv className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">Memuat...</p>
+              </div>
             </div>
           )}
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface StreamInfo {
   serverName: string;
@@ -31,22 +31,17 @@ export function ViewerInfo({ stream }: ViewerInfoProps) {
   }, []);
 
   return (
-    <div className="bg-card rounded-lg border border-border p-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-          <User className="w-5 h-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p className="font-heading font-semibold text-foreground">{stream.serverName}</p>
-          <p className="text-xs text-muted-foreground">
-            {stream.isLive ? 'Siaran Langsung' : 'Offline'}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <span className={`w-2 h-2 rounded-full ${stream.isLive ? 'bg-live live-pulse' : 'bg-muted-foreground'}`} />
-        <span className="text-sm font-heading font-semibold text-foreground">{viewerCount}</span>
-        <span className="text-xs text-muted-foreground">penonton</span>
+        <span className="text-sm font-heading font-semibold text-foreground">{stream.serverName}</span>
+        <span className="text-xs text-muted-foreground">
+          {stream.isLive ? '• Siaran Langsung' : '• Offline'}
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Eye className="w-3.5 h-3.5" />
+        <span className="text-xs font-medium">{viewerCount}</span>
       </div>
     </div>
   );

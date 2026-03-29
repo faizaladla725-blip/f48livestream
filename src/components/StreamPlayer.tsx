@@ -26,8 +26,6 @@ export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
     const iframe = iframeRef.current;
     if (!iframe) return;
     try {
-      // Try to get the video element inside iframe (same-origin won't work for YT)
-      // Fallback: use documentPictureInPicture API or requestPictureInPicture on iframe
       if ('documentPictureInPicture' in window) {
         const pipWindow = await (window as any).documentPictureInPicture.requestWindow({
           width: 400,
@@ -50,16 +48,20 @@ export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
 
   if (!videoId) {
     return (
-      <div className="aspect-video bg-stream rounded-lg flex flex-col items-center justify-center gap-3">
-        <Tv className="w-12 h-12 text-muted-foreground" />
-        <p className="text-foreground font-heading text-lg">Stream Offline</p>
-        <p className="text-muted-foreground text-sm">Menunggu siaran dimulai...</p>
+      <div className="aspect-video bg-card rounded-xl border border-border flex flex-col items-center justify-center gap-3">
+        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+          <Tv className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <div className="text-center">
+          <p className="text-foreground font-heading font-semibold">Stream Offline</p>
+          <p className="text-muted-foreground text-xs mt-0.5">Menunggu siaran dimulai...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="aspect-video bg-stream rounded-lg overflow-hidden relative group">
+    <div ref={containerRef} className="aspect-video bg-stream rounded-xl overflow-hidden relative group">
       <iframe
         ref={iframeRef}
         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1`}
@@ -68,28 +70,28 @@ export function StreamPlayer({ youtubeUrl, isLive }: StreamPlayerProps) {
         allowFullScreen
         title="Live Stream"
       />
-      {/* LIVE badge - smaller */}
+      {/* LIVE badge */}
       {isLive && (
-        <div className="absolute top-2 left-2 flex items-center gap-1 bg-live/90 px-1.5 py-0.5 rounded">
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-live/90 px-2 py-0.5 rounded-md backdrop-blur-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground live-pulse" />
-          <span className="text-[10px] font-heading font-semibold text-primary-foreground leading-none">LIVE</span>
+          <span className="text-[10px] font-heading font-bold text-primary-foreground leading-none">LIVE</span>
         </div>
       )}
       {/* Controls overlay */}
-      <div className="absolute bottom-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent pt-8 pb-2.5 px-3 flex items-end justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handlePip}
-          className="bg-background/70 hover:bg-background/90 text-foreground rounded p-1.5 backdrop-blur-sm transition-colors"
+          className="bg-foreground/20 hover:bg-foreground/30 text-primary-foreground rounded-lg p-2 backdrop-blur-sm transition-colors"
           title="Picture in Picture"
         >
-          <PictureInPicture2 className="w-3.5 h-3.5" />
+          <PictureInPicture2 className="w-4 h-4" />
         </button>
         <button
           onClick={handleFullscreen}
-          className="bg-background/70 hover:bg-background/90 text-foreground rounded p-1.5 backdrop-blur-sm transition-colors"
+          className="bg-foreground/20 hover:bg-foreground/30 text-primary-foreground rounded-lg p-2 backdrop-blur-sm transition-colors"
           title="Fullscreen"
         >
-          <Maximize className="w-3.5 h-3.5" />
+          <Maximize className="w-4 h-4" />
         </button>
       </div>
     </div>
