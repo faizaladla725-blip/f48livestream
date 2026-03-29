@@ -44,6 +44,13 @@ export type Database = {
             referencedRelation: "viewers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chat_messages_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "viewers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stream_settings: {
@@ -126,7 +133,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      viewers_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_banned: boolean | null
+          is_online: boolean | null
+          last_seen: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_banned?: boolean | null
+          is_online?: boolean | null
+          last_seen?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_banned?: boolean | null
+          is_online?: boolean | null
+          last_seen?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
