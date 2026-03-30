@@ -73,3 +73,21 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+@keyframes watermark-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes watermark-scroll-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.watermark-scroll {
+  animation: watermark-scroll 20s linear infinite;
+}
+
+.watermark-scroll-reverse {
+  animation: watermark-scroll-reverse 25s linear infinite;
+}

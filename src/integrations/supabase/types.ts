@@ -53,13 +53,68 @@ export type Database = {
           },
         ]
       }
+      shows: {
+        Row: {
+          access_token: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          m3u8_url: string | null
+          scheduled_at: string
+          server_id: string | null
+          stream_type: string
+          title: string
+          youtube_url: string | null
+        }
+        Insert: {
+          access_token?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          m3u8_url?: string | null
+          scheduled_at: string
+          server_id?: string | null
+          stream_type?: string
+          title: string
+          youtube_url?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          m3u8_url?: string | null
+          scheduled_at?: string
+          server_id?: string | null
+          stream_type?: string
+          title?: string
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shows_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "stream_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_settings: {
         Row: {
           access_code: string | null
           created_at: string
           id: string
           is_live: boolean
+          m3u8_url: string | null
           server_name: string
+          stream_type: string
           updated_at: string
           youtube_url: string | null
         }
@@ -68,7 +123,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_live?: boolean
+          m3u8_url?: string | null
           server_name: string
+          stream_type?: string
           updated_at?: string
           youtube_url?: string | null
         }
@@ -77,7 +134,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_live?: boolean
+          m3u8_url?: string | null
           server_name?: string
+          stream_type?: string
           updated_at?: string
           youtube_url?: string | null
         }

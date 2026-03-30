@@ -4,12 +4,15 @@ import { StreamPlayer } from './StreamPlayer';
 import { LiveChat } from './LiveChat';
 import { ViewerInfo } from './ViewerInfo';
 import { ServerTabs } from './ServerTabs';
+import { ShowSchedule } from './ShowSchedule';
 import { LogOut, Settings, Tv } from 'lucide-react';
 
 interface StreamSetting {
   id: string;
   server_name: string;
   youtube_url: string;
+  m3u8_url?: string;
+  stream_type?: string;
   is_live: boolean;
 }
 
@@ -96,6 +99,8 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
             <>
               <StreamPlayer
                 youtubeUrl={activeServer.youtube_url || ''}
+                m3u8Url={activeServer.m3u8_url || ''}
+                streamType={(activeServer.stream_type as 'youtube' | 'm3u8') || 'youtube'}
                 isLive={activeServer.is_live}
               />
               <ViewerInfo
@@ -113,6 +118,9 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
               </div>
             </div>
           )}
+
+          {/* Show Schedule */}
+          <ShowSchedule />
 
           <LiveChat viewerId={viewerId} username={username} isAdmin={isAdmin} />
         </div>

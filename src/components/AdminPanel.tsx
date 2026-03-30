@@ -3,12 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2 } from 'lucide-react';
+import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar } from 'lucide-react';
+import { AdminShowManager } from './AdminShowManager';
 
 interface StreamSetting {
   id: string;
   server_name: string;
   youtube_url: string;
+  m3u8_url?: string;
+  stream_type?: string;
   is_live: boolean;
   access_code?: string;
 }
@@ -24,7 +27,7 @@ interface Viewer {
 export function AdminPanel() {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [viewers, setViewers] = useState<Viewer[]>([]);
-  const [tab, setTab] = useState<'settings' | 'viewers'>('settings');
+  const [tab, setTab] = useState<'settings' | 'viewers' | 'shows'>('settings');
   const [accessCode, setAccessCode] = useState('');
 
   useEffect(() => {
@@ -50,12 +53,11 @@ export function AdminPanel() {
   };
 
   const updateServer = async (id: string, updates: Partial<StreamSetting>) => {
-    await supabase.from('stream_settings').update(updates).eq('id', id);
+    await supabase.from('stream_settings').update(updates as any).eq('id', id);
     fetchServers();
   };
 
   const updateAccessCode = async () => {
-    // Update access code on all servers
     for (const server of servers) {
       await supabase.from('stream_settings').update({ access_code: accessCode } as any).eq('id', server.id);
     }
@@ -66,8 +68,8 @@ export function AdminPanel() {
     fetchViewers();
   };
 
-  const clearYoutubeUrl = async (id: string) => {
-    await supabase.from('stream_settings').update({ youtube_url: '', is_live: false }).eq('id', id);
+  const clearStreamUrl = async (id: string) => {
+    await supabase.from('stream_settings').update({ youtube_url: '', m3u8_url: '', is_live: false } as any).eq('id', id);
     fetchServers();
   };
 
@@ -106,12 +108,20 @@ export function AdminPanel() {
             <Tv className="w-4 h-4 mr-1.5" /> Stream
           </Button>
           <Button
+            variant={tab === 'shows' ? 'default' : 'secondary'}
+            onClick={() => setTab('shows')}
+            className="flex-1 font-heading rounded-xl h-10"
+            size="sm"
+          >
+            <Calendar className="w-4 h-4 mr-1.5" /> Shows
+          </Button>
+          <Button
             variant={tab === 'viewers' ? 'default' : 'secondary'}
             onClick={() => setTab('viewers')}
             className="flex-1 font-heading rounded-xl h-10"
             size="sm"
           >
-            <Users className="w-4 h-4 mr-1.5" /> Penonton ({onlineCount})
+            <Users className="w-4 h-4 mr-1.5" /> ({onlineCount})
           </Button>
         </div>
 
@@ -152,18 +162,38 @@ export function AdminPanel() {
                     />
                   </div>
                 </div>
+
+                {/* Stream type selector */}
+                <select
+                  value={server.stream_type || 'youtube'}
+                  onChange={(e) => updateServer(server.id, { stream_type: e.target.value } as any)}
+                  className="w-full bg-muted text-foreground text-sm rounded-lg h-9 px-3 border-0"
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="m3u8">M3U8/HLS</option>
+                </select>
+
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="YouTube URL..."
-                    value={server.youtube_url || ''}
-                    onChange={(e) => updateServer(server.id, { youtube_url: e.target.value })}
-                    className="bg-muted border-0 text-foreground text-sm rounded-lg"
-                  />
+                  {(server.stream_type || 'youtube') === 'youtube' ? (
+                    <Input
+                      placeholder="YouTube URL..."
+                      value={server.youtube_url || ''}
+                      onChange={(e) => updateServer(server.id, { youtube_url: e.target.value })}
+                      className="bg-muted border-0 text-foreground text-sm rounded-lg"
+                    />
+                  ) : (
+                    <Input
+                      placeholder="M3U8 URL..."
+                      value={server.m3u8_url || ''}
+                      onChange={(e) => updateServer(server.id, { m3u8_url: e.target.value } as any)}
+                      className="bg-muted border-0 text-foreground text-sm rounded-lg"
+                    />
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="shrink-0 h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
-                    onClick={() => clearYoutubeUrl(server.id)}
+                    onClick={() => clearStreamUrl(server.id)}
                     title="Hapus URL"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -172,6 +202,10 @@ export function AdminPanel() {
               </div>
             ))}
           </div>
+        )}
+
+        {tab === 'shows' && (
+          <AdminShowManager servers={servers.map(s => ({ id: s.id, server_name: s.server_name }))} />
         )}
 
         {tab === 'viewers' && (
