@@ -5,7 +5,8 @@ import { LiveChat } from './LiveChat';
 import { ViewerInfo } from './ViewerInfo';
 import { ServerTabs } from './ServerTabs';
 import { ShowSchedule } from './ShowSchedule';
-import { LogOut, Settings, Tv } from 'lucide-react';
+import { RealtimeClock } from './RealtimeClock';
+import { LogOut, Settings, Tv, Calendar } from 'lucide-react';
 
 interface StreamSetting {
   id: string;
@@ -27,6 +28,7 @@ interface StreamPageProps {
 export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin }: StreamPageProps) {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [activeServerId, setActiveServerId] = useState('');
+  const [showSchedule, setShowSchedule] = useState(false);
 
   useEffect(() => {
     const fetchServers = async () => {
@@ -41,13 +43,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
 
     const channel = supabase
       .channel('stream_settings')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'stream_settings',
-      }, () => {
-        fetchServers();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_settings' }, () => fetchServers())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -59,42 +55,46 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
     <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
-              <Tv className="w-4 h-4 text-primary" />
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center border border-primary/15">
+              <Tv className="w-3.5 h-3.5 text-primary" />
             </div>
-            <h1 className="text-base font-heading font-bold text-foreground tracking-tight">FOUR48</h1>
+            <span className="text-sm font-heading font-bold text-foreground">F48</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-secondary/50 rounded-full px-3 py-1">
-              <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-[9px] font-bold text-primary">{username[0]?.toUpperCase()}</span>
+
+          <RealtimeClock />
+
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 bg-secondary/30 rounded-full px-2 py-1">
+              <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center">
+                <span className="text-[8px] font-bold text-primary">{username[0]?.toUpperCase()}</span>
               </div>
-              <span className="text-xs text-foreground font-medium">{username}</span>
+              <span className="text-[10px] text-foreground font-medium max-w-[60px] truncate">{username}</span>
             </div>
+            <button
+              onClick={() => setShowSchedule(!showSchedule)}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${showSchedule ? 'bg-primary/20 text-primary' : 'bg-secondary/30 text-muted-foreground hover:text-foreground'}`}
+            >
+              <Calendar className="w-3 h-3" />
+            </button>
             {onAdminClick && (
-              <button onClick={onAdminClick} className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                <Settings className="w-3.5 h-3.5" />
+              <button onClick={onAdminClick} className="w-7 h-7 rounded-lg bg-secondary/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <Settings className="w-3 h-3" />
               </button>
             )}
-            <button onClick={onLogout} className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-              <LogOut className="w-3.5 h-3.5" />
+            <button onClick={onLogout} className="w-7 h-7 rounded-lg bg-secondary/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut className="w-3 h-3" />
             </button>
           </div>
         </div>
 
-        {/* Server tabs */}
-        <div className="px-4 pt-3 pb-2">
-          <ServerTabs
-            servers={servers}
-            activeServer={activeServerId}
-            onServerChange={setActiveServerId}
-          />
-        </div>
+        {/* Main content */}
+        <div className="px-3 pt-2 pb-4 space-y-2.5">
+          {/* Server tabs */}
+          <ServerTabs servers={servers} activeServer={activeServerId} onServerChange={setActiveServerId} />
 
-        {/* Stream */}
-        <div className="px-4 space-y-3 pb-4">
+          {/* Stream player */}
           {activeServer ? (
             <>
               <StreamPlayer
@@ -103,25 +103,18 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
                 streamType={(activeServer.stream_type as 'youtube' | 'm3u8') || 'youtube'}
                 isLive={activeServer.is_live}
               />
-              <ViewerInfo
-                stream={{
-                  serverName: activeServer.server_name,
-                  isLive: activeServer.is_live,
-                }}
-              />
+              <ViewerInfo stream={{ serverName: activeServer.server_name, isLive: activeServer.is_live }} />
             </>
           ) : (
-            <div className="aspect-video bg-stream rounded-xl flex items-center justify-center">
-              <div className="text-center">
-                <Tv className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">Memuat...</p>
-              </div>
+            <div className="aspect-video bg-card/50 rounded-2xl flex items-center justify-center">
+              <Tv className="w-6 h-6 text-muted-foreground/30" />
             </div>
           )}
 
-          {/* Show Schedule */}
-          <ShowSchedule />
+          {/* Show Schedule - toggleable */}
+          {showSchedule && <ShowSchedule />}
 
+          {/* Chat */}
           <LiveChat viewerId={viewerId} username={username} isAdmin={isAdmin} />
         </div>
       </div>
