@@ -34,7 +34,6 @@ export function useViewer() {
             localStorage.removeItem(SESSION_KEY);
             setViewer(null);
           } else if (data?.session_token && storedSession && data.session_token !== storedSession) {
-            // Session mismatch - someone else logged in with this device
             localStorage.removeItem(VIEWER_KEY);
             localStorage.removeItem(SESSION_KEY);
             setViewer(null);
@@ -109,6 +108,45 @@ export function useViewer() {
     setViewer(null);
   };
 
+  // Auto-offline on page close
+  useEffect(() => {
+    if (!viewer) return;
+
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for reliable offline marking
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/viewers?id=eq.${viewer.id}`;
+      const body = JSON.stringify({ is_online: false });
+      navigator.sendBeacon(
+        url,
+        new Blob([body], { type: 'application/json' })
+      );
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        supabase
+          .from('viewers')
+          .update({ is_online: false })
+          .eq('id', viewer.id)
+          .then(() => {});
+      } else if (document.visibilityState === 'visible') {
+        supabase
+          .from('viewers')
+          .update({ is_online: true, last_seen: new Date().toISOString() })
+          .eq('id', viewer.id)
+          .then(() => {});
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [viewer]);
+
   // Heartbeat + session validation
   useEffect(() => {
     if (!viewer) return;
@@ -129,7 +167,6 @@ export function useViewer() {
 
       const localSession = localStorage.getItem(SESSION_KEY);
       if (data?.session_token && localSession && data.session_token !== localSession) {
-        // Another device took over this account
         localStorage.removeItem(VIEWER_KEY);
         localStorage.removeItem(SESSION_KEY);
         setViewer(null);

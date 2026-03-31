@@ -1,6 +1,6 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { extractYoutubeVideoId } from '@/lib/youtubeUtils';
-import { Tv, Maximize, PictureInPicture2 } from 'lucide-react';
+import { Tv, Maximize, Minimize, PictureInPicture2 } from 'lucide-react';
 import Hls from 'hls.js';
 
 interface StreamPlayerProps {
@@ -13,15 +13,20 @@ interface StreamPlayerProps {
 export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLive }: StreamPlayerProps) {
   const videoId = streamType === 'youtube' ? extractYoutubeVideoId(youtubeUrl) : null;
   const containerRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [iframeKey] = useState(() => Math.random().toString(36));
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPip, setIsPip] = useState(false);
+
+  // Stable iframe src - only changes when videoId actually changes
+  const iframeSrc = useMemo(() => {
+    if (!videoId) return '';
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1&origin=${window.location.origin}`;
+  }, [videoId]);
 
   // HLS setup
   useEffect(() => {
     if (streamType !== 'm3u8' || !m3u8Url || !videoRef.current) return;
-
     const video = videoRef.current;
 
     if (Hls.isSupported()) {
@@ -29,6 +34,10 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
         enableWorker: true,
         lowLatencyMode: true,
         liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 10,
+        liveDurationInfinity: true,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
       });
       hlsRef.current = hls;
       hls.loadSource(m3u8Url);
@@ -39,7 +48,7 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
+            setTimeout(() => hls.startLoad(), 1000);
           } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
           }
@@ -47,9 +56,7 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = m3u8Url;
-      video.addEventListener('loadedmetadata', () => {
-        video.play().catch(() => {});
-      });
+      video.addEventListener('loadedmetadata', () => video.play().catch(() => {}));
     }
 
     return () => {
@@ -59,6 +66,13 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       }
     };
   }, [m3u8Url, streamType]);
+
+  // Track fullscreen state
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   const handleFullscreen = useCallback(() => {
     const container = containerRef.current;
@@ -71,13 +85,14 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
   }, []);
 
   const handlePip = useCallback(async () => {
-    // For M3U8, use native PiP on the video element
     if (streamType === 'm3u8' && videoRef.current) {
       try {
         if (document.pictureInPictureElement) {
           await document.exitPictureInPicture();
+          setIsPip(false);
         } else {
           await videoRef.current.requestPictureInPicture();
+          setIsPip(true);
         }
       } catch (e) {
         console.log('PiP not supported:', e);
@@ -85,53 +100,47 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       return;
     }
 
-    // For YouTube, use Document PiP API
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    try {
-      if ('documentPictureInPicture' in window) {
-        const pipWindow = await (window as any).documentPictureInPicture.requestWindow({
-          width: 400,
-          height: 225,
-        });
-        const pipIframe = pipWindow.document.createElement('iframe');
-        pipIframe.src = iframe.src;
-        pipIframe.style.width = '100%';
-        pipIframe.style.height = '100%';
-        pipIframe.style.border = 'none';
-        pipIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        pipWindow.document.body.style.margin = '0';
-        pipWindow.document.body.style.overflow = 'hidden';
-        pipWindow.document.body.appendChild(pipIframe);
+    // For YouTube - open in small window
+    if (videoId) {
+      try {
+        if ('documentPictureInPicture' in window) {
+          const pipWindow = await (window as any).documentPictureInPicture.requestWindow({
+            width: 400,
+            height: 225,
+          });
+          const pipIframe = pipWindow.document.createElement('iframe');
+          pipIframe.src = iframeSrc;
+          pipIframe.style.cssText = 'width:100%;height:100%;border:none;';
+          pipIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          pipWindow.document.body.style.cssText = 'margin:0;overflow:hidden;background:#000;';
+          pipWindow.document.body.appendChild(pipIframe);
+          setIsPip(true);
+          pipWindow.addEventListener('pagehide', () => setIsPip(false));
+        }
+      } catch (e) {
+        console.log('PiP not supported:', e);
       }
-    } catch (e) {
-      console.log('PiP not supported:', e);
     }
-  }, [streamType]);
+  }, [streamType, videoId, iframeSrc]);
 
   const hasStream = streamType === 'youtube' ? !!videoId : !!m3u8Url;
 
-  if (!hasStream) {
+  if (!isLive || !hasStream) {
     return (
-      <div className="aspect-video bg-card rounded-xl border border-border flex flex-col items-center justify-center gap-3">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-          <Tv className="w-8 h-8 text-muted-foreground" />
+      <div className="aspect-video bg-card/50 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-2">
+        <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
+          <Tv className="w-6 h-6 text-muted-foreground/50" />
         </div>
-        <div className="text-center">
-          <p className="text-foreground font-heading font-semibold">Stream Offline</p>
-          <p className="text-muted-foreground text-xs mt-0.5">Menunggu siaran dimulai...</p>
-        </div>
+        <p className="text-muted-foreground text-xs font-heading">Stream Offline</p>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="aspect-video bg-stream rounded-xl overflow-hidden relative group">
+    <div ref={containerRef} className="aspect-video bg-stream rounded-2xl overflow-hidden relative group">
       {streamType === 'youtube' && videoId ? (
         <iframe
-          key={iframeKey}
-          ref={iframeRef}
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1`}
+          src={iframeSrc}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -147,42 +156,42 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
         />
       )}
 
-      {/* Scrolling watermark */}
+      {/* Watermark */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-        <div className="watermark-scroll absolute whitespace-nowrap text-foreground/[0.06] text-lg font-heading font-bold tracking-widest" style={{ top: '20%' }}>
-          f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48
+        <div className="watermark-scroll absolute whitespace-nowrap text-foreground/[0.04] text-sm font-heading tracking-[0.5em]" style={{ top: '25%' }}>
+          {'f48 · '.repeat(20)}
         </div>
-        <div className="watermark-scroll-reverse absolute whitespace-nowrap text-foreground/[0.06] text-lg font-heading font-bold tracking-widest" style={{ top: '50%' }}>
-          f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48
+        <div className="watermark-scroll-reverse absolute whitespace-nowrap text-foreground/[0.04] text-sm font-heading tracking-[0.5em]" style={{ top: '55%' }}>
+          {'f48 · '.repeat(20)}
         </div>
-        <div className="watermark-scroll absolute whitespace-nowrap text-foreground/[0.06] text-lg font-heading font-bold tracking-widest" style={{ top: '80%' }}>
-          f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48 &nbsp; f48
+        <div className="watermark-scroll absolute whitespace-nowrap text-foreground/[0.04] text-sm font-heading tracking-[0.5em]" style={{ top: '80%' }}>
+          {'f48 · '.repeat(20)}
         </div>
       </div>
 
       {/* LIVE badge */}
       {isLive && (
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-live/90 px-2 py-0.5 rounded-md backdrop-blur-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground live-pulse" />
-          <span className="text-[10px] font-heading font-bold text-primary-foreground leading-none">LIVE</span>
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-live/90 px-1.5 py-0.5 rounded backdrop-blur-sm">
+          <span className="w-1 h-1 rounded-full bg-primary-foreground live-pulse" />
+          <span className="text-[8px] font-heading font-bold text-primary-foreground">LIVE</span>
         </div>
       )}
 
-      {/* Controls overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent pt-8 pb-2.5 px-3 flex items-end justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Controls */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent pt-6 pb-2 px-2 flex items-end justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <button
           onClick={handlePip}
-          className="bg-foreground/20 hover:bg-foreground/30 text-primary-foreground rounded-lg p-2 backdrop-blur-sm transition-colors"
+          className="bg-foreground/15 hover:bg-foreground/25 text-primary-foreground rounded-lg p-1.5 backdrop-blur-sm transition-colors"
           title="Picture in Picture"
         >
-          <PictureInPicture2 className="w-4 h-4" />
+          <PictureInPicture2 className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleFullscreen}
-          className="bg-foreground/20 hover:bg-foreground/30 text-primary-foreground rounded-lg p-2 backdrop-blur-sm transition-colors"
+          className="bg-foreground/15 hover:bg-foreground/25 text-primary-foreground rounded-lg p-1.5 backdrop-blur-sm transition-colors"
           title="Fullscreen"
         >
-          <Maximize className="w-4 h-4" />
+          {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
         </button>
       </div>
     </div>
