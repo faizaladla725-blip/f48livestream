@@ -102,7 +102,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
                 streamType={(activeServer.stream_type as 'youtube' | 'm3u8') || 'youtube'}
                 isLive={activeServer.is_live}
               />
-              <ViewerInfo stream={{ serverName: activeServer.server_name, isLive: activeServer.is_live }} />
+              <ViewerInfo stream={{ serverName: activeServer.server_name, isLive: activeServer.is_live, maxViewers: (activeServer as any).max_viewers || 50 }} />
             </>
           ) : (
             <div className="aspect-video bg-card/50 rounded-2xl flex items-center justify-center">
