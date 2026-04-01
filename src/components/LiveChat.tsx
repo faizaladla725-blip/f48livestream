@@ -26,7 +26,6 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
 
-  // Check if user is near bottom
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -35,6 +34,7 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
   }, []);
 
   useEffect(() => {
+    // Fetch initial messages
     supabase
       .from('chat_messages')
       .select('*')
@@ -44,13 +44,22 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
         if (data) setMessages(data.reverse() as ChatMessage[]);
       });
 
+    // Realtime subscription with unique channel name
     const channel = supabase
-      .channel('chat_realtime')
+      .channel('chat_messages_realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
-        setMessages(prev => [...prev.slice(-99), payload.new as ChatMessage]);
+        const newMsg = payload.new as ChatMessage;
+        setMessages(prev => {
+          // Avoid duplicates
+          if (prev.some(m => m.id === newMsg.id)) return prev;
+          return [...prev.slice(-99), newMsg];
+        });
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, (payload) => {
-        setMessages(prev => prev.filter(m => m.id !== (payload.old as any).id));
+        const oldId = (payload.old as any)?.id;
+        if (oldId) {
+          setMessages(prev => prev.filter(m => m.id !== oldId));
+        }
       })
       .subscribe();
 
@@ -85,7 +94,11 @@ export function LiveChat({ viewerId, username, isAdmin }: LiveChatProps) {
   };
 
   const deleteMessage = async (msgId: string) => {
-    await supabase.from('chat_messages').delete().eq('id', msgId);
+    const { error } = await supabase.from('chat_messages').delete().eq('id', msgId);
+    if (error) {
+      toast.error('Gagal menghapus pesan');
+      console.error('Delete error:', error);
+    }
   };
 
   const formatTime = (dateStr: string) => {

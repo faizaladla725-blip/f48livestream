@@ -13,9 +13,9 @@ const Index = () => {
   const [view, setView] = useState<View>('login');
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Check admin status via supabase auth
   useEffect(() => {
-    // Check if admin is already logged in
-    supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         supabase
           .from('user_roles')
@@ -23,14 +23,13 @@ const Index = () => {
           .eq('user_id', session.user.id)
           .eq('role', 'admin')
           .then(({ data }) => {
-            if (data && data.length > 0) {
-              setIsAdmin(true);
-            }
+            setIsAdmin(!!(data && data.length > 0));
           });
       } else {
         setIsAdmin(false);
       }
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -43,6 +42,17 @@ const Index = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground font-heading">Loading...</p>
+      </div>
+    );
+  }
+
+  if (banned) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center space-y-2">
+          <p className="text-destructive font-heading font-bold">Akun Dibanned</p>
+          <p className="text-muted-foreground text-sm">Kamu telah dibanned oleh admin.</p>
+        </div>
       </div>
     );
   }

@@ -42,7 +42,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
     fetchServers();
 
     const channel = supabase
-      .channel('stream_settings')
+      .channel('stream_settings_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'stream_settings' }, () => fetchServers())
       .subscribe();
 
@@ -67,7 +67,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
 
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-1 bg-secondary/30 rounded-full px-2 py-1">
-              <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center border border-primary/20">
                 <span className="text-[8px] font-bold text-primary">{username[0]?.toUpperCase()}</span>
               </div>
               <span className="text-[10px] text-foreground font-medium max-w-[60px] truncate">{username}</span>
@@ -91,10 +91,8 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
 
         {/* Main content */}
         <div className="px-3 pt-2 pb-4 space-y-2.5">
-          {/* Server tabs */}
           <ServerTabs servers={servers} activeServer={activeServerId} onServerChange={setActiveServerId} />
 
-          {/* Stream player */}
           {activeServer ? (
             <>
               <StreamPlayer
@@ -111,10 +109,8 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
             </div>
           )}
 
-          {/* Show Schedule - toggleable */}
           {showSchedule && <ShowSchedule />}
 
-          {/* Chat */}
           <LiveChat viewerId={viewerId} username={username} isAdmin={isAdmin} />
         </div>
       </div>

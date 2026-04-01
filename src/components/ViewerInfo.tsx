@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Radio } from 'lucide-react';
+import { Eye, Radio, AlertTriangle } from 'lucide-react';
+
+const MAX_VIEWERS = 50; // Server full threshold
 
 interface StreamInfo {
   serverName: string;
@@ -24,9 +26,11 @@ export function ViewerInfo({ stream }: ViewerInfoProps) {
     };
 
     fetchCount();
-    const interval = setInterval(fetchCount, 15000);
+    const interval = setInterval(fetchCount, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const isFull = viewerCount >= MAX_VIEWERS;
 
   return (
     <div className="flex items-center justify-between px-1">
@@ -41,9 +45,17 @@ export function ViewerInfo({ stream }: ViewerInfoProps) {
           {stream.isLive ? 'Live' : 'Offline'}
         </span>
       </div>
-      <div className="flex items-center gap-1 text-muted-foreground">
-        <Eye className="w-3 h-3" />
-        <span className="text-[10px] font-medium">{viewerCount}</span>
+      <div className="flex items-center gap-2">
+        {isFull && (
+          <span className="flex items-center gap-0.5 text-[9px] text-destructive font-heading font-semibold bg-destructive/10 px-1.5 py-0.5 rounded">
+            <AlertTriangle className="w-2.5 h-2.5" />
+            Full
+          </span>
+        )}
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <Eye className="w-3 h-3" />
+          <span className="text-[10px] font-medium">{viewerCount}</span>
+        </div>
       </div>
     </div>
   );
