@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar } from 'lucide-react';
+import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar, Eye, Radio, Server } from 'lucide-react';
 import { AdminShowManager } from './AdminShowManager';
 
 interface StreamSetting {
@@ -14,6 +14,7 @@ interface StreamSetting {
   stream_type?: string;
   is_live: boolean;
   access_code?: string;
+  max_viewers?: number;
 }
 
 interface Viewer {
@@ -79,6 +80,8 @@ export function AdminPanel() {
   };
 
   const onlineCount = viewers.filter(v => v.is_online && !v.is_banned).length;
+  const totalViewers = viewers.length;
+  const bannedCount = viewers.filter(v => v.is_banned).length;
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -96,6 +99,57 @@ export function AdminPanel() {
           <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-lg">
             <LogOut className="w-4 h-4" />
           </Button>
+        </div>
+
+        {/* Server Stats Overview */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-card rounded-xl border border-border p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Eye className="w-3 h-3" />
+              <span className="text-[9px] font-heading">Online</span>
+            </div>
+            <p className="text-lg font-heading font-bold text-online">{onlineCount}</p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Users className="w-3 h-3" />
+              <span className="text-[9px] font-heading">Total</span>
+            </div>
+            <p className="text-lg font-heading font-bold text-foreground">{totalViewers}</p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Ban className="w-3 h-3" />
+              <span className="text-[9px] font-heading">Banned</span>
+            </div>
+            <p className="text-lg font-heading font-bold text-destructive">{bannedCount}</p>
+          </div>
+        </div>
+
+        {/* Server data cards */}
+        <div className="space-y-2">
+          {servers.map((server) => {
+            const maxV = (server as any).max_viewers || 50;
+            return (
+              <div key={server.id} className="bg-card/60 rounded-xl border border-border/50 px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {server.is_live ? (
+                    <Radio className="w-3 h-3 text-live live-pulse" />
+                  ) : (
+                    <Server className="w-3 h-3 text-muted-foreground" />
+                  )}
+                  <span className="text-xs font-heading font-semibold text-foreground">{server.server_name}</span>
+                  <span className={`text-[8px] font-heading font-bold px-1.5 py-0.5 rounded ${server.is_live ? 'bg-live/20 text-live' : 'bg-muted text-muted-foreground'}`}>
+                    {server.is_live ? 'LIVE' : 'OFF'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Eye className="w-3 h-3" />
+                  <span className="text-[10px] font-medium">{onlineCount}/{maxV}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex gap-2">
@@ -161,6 +215,20 @@ export function AdminPanel() {
                       onCheckedChange={(checked) => updateServer(server.id, { is_live: checked })}
                     />
                   </div>
+                </div>
+
+                {/* Max viewers setting */}
+                <div className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-[10px] text-muted-foreground shrink-0">Max Viewer:</span>
+                  <Input
+                    type="number"
+                    value={(server as any).max_viewers || 50}
+                    onChange={(e) => updateServer(server.id, { max_viewers: parseInt(e.target.value) || 50 } as any)}
+                    className="bg-muted border-0 text-foreground text-sm rounded-lg h-8 w-20"
+                    min="1"
+                    max="10000"
+                  />
                 </div>
 
                 {/* Stream type selector */}
