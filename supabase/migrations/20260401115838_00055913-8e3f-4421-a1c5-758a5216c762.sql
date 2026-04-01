@@ -1,0 +1,1 @@
+ALTER TABLE public.stream_settings ADD COLUMN max_viewers integer NOT NULL DEFAULT 50;

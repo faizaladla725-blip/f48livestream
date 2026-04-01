@@ -113,6 +113,7 @@ export type Database = {
           id: string
           is_live: boolean
           m3u8_url: string | null
+          max_viewers: number
           server_name: string
           stream_type: string
           updated_at: string
@@ -124,6 +125,7 @@ export type Database = {
           id?: string
           is_live?: boolean
           m3u8_url?: string | null
+          max_viewers?: number
           server_name: string
           stream_type?: string
           updated_at?: string
@@ -135,6 +137,7 @@ export type Database = {
           id?: string
           is_live?: boolean
           m3u8_url?: string | null
+          max_viewers?: number
           server_name?: string
           stream_type?: string
           updated_at?: string
