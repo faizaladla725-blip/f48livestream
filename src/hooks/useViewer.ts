@@ -112,23 +112,24 @@ export function useViewer() {
   useEffect(() => {
     if (!viewer) return;
 
-    const handleBeforeUnload = () => {
-      // Use sendBeacon for reliable offline marking
+    const markOffline = () => {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/viewers?id=eq.${viewer.id}`;
-      const body = JSON.stringify({ is_online: false });
-      navigator.sendBeacon(
-        url,
-        new Blob([body], { type: 'application/json' })
-      );
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({ is_online: false }),
+        keepalive: true,
+      }).catch(() => {});
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        supabase
-          .from('viewers')
-          .update({ is_online: false })
-          .eq('id', viewer.id)
-          .then(() => {});
+        markOffline();
       } else if (document.visibilityState === 'visible') {
         supabase
           .from('viewers')
@@ -138,11 +139,11 @@ export function useViewer() {
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', markOffline);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', markOffline);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [viewer]);

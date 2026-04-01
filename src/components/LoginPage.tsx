@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tv, Lock, Mail, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Tv, KeyRound, User, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LoginPageProps {
@@ -10,14 +10,11 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onAdminClick }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [accessCode, setAccessCode] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [requiredCode, setRequiredCode] = useState('');
-  const [isSignup, setIsSignup] = useState(false);
 
   useEffect(() => {
     supabase.from('stream_settings').select('access_code').limit(1).then(({ data }) => {
@@ -29,7 +26,7 @@ export function LoginPage({ onLogin, onAdminClick }: LoginPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
+    if (!username.trim()) return;
 
     if (requiredCode && accessCode !== requiredCode) {
       setError('Kode akses salah!');
@@ -39,24 +36,9 @@ export function LoginPage({ onLogin, onAdminClick }: LoginPageProps) {
     setLoading(true);
     setError('');
     try {
-      if (isSignup) {
-        const { error: signupError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (signupError) throw signupError;
-      } else {
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (loginError) throw loginError;
-      }
-      // Use email prefix as display name
-      await onLogin(email.trim().split('@')[0]);
+      await onLogin(username.trim());
     } catch (err: any) {
-      setError(err.message || 'Gagal login');
+      setError(err.message || 'Gagal masuk');
     } finally {
       setLoading(false);
     }
@@ -77,32 +59,16 @@ export function LoginPage({ onLogin, onAdminClick }: LoginPageProps) {
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 space-y-4">
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="bg-muted/50 border-border/30 text-foreground placeholder:text-muted-foreground h-11 text-sm pl-10 rounded-xl"
+                maxLength={20}
               />
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-muted/50 border-border/30 text-foreground placeholder:text-muted-foreground h-11 text-sm pl-10 pr-10 rounded-xl"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+
             {requiredCode && (
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -123,17 +89,9 @@ export function LoginPage({ onLogin, onAdminClick }: LoginPageProps) {
               </div>
             )}
 
-            <Button type="submit" disabled={loading || !email.trim() || !password.trim()} className="w-full h-11 text-sm font-heading font-semibold rounded-xl">
-              {loading ? 'Memuat...' : isSignup ? 'Daftar' : 'Masuk'}
+            <Button type="submit" disabled={loading || !username.trim()} className="w-full h-11 text-sm font-heading font-semibold rounded-xl">
+              {loading ? 'Memuat...' : 'Masuk'}
             </Button>
-
-            <button
-              type="button"
-              onClick={() => { setIsSignup(!isSignup); setError(''); }}
-              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-            >
-              {isSignup ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
-            </button>
           </form>
         </div>
 
