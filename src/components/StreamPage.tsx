@@ -15,6 +15,7 @@ interface StreamSetting {
   m3u8_url?: string;
   stream_type?: string;
   is_live: boolean;
+  max_viewers?: number;
 }
 
 interface StreamPageProps {
