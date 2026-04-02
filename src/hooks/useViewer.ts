@@ -138,6 +138,7 @@ export function useViewer() {
     }
     localStorage.removeItem(VIEWER_KEY);
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(LOGIN_TIME_KEY);
     setViewer(null);
   };
 
