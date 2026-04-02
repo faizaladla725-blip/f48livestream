@@ -123,6 +123,7 @@ export function useViewer() {
     const v: Viewer = { id: data.id, username: data.username, device_id: data.device_id, session_token: sessionToken };
     localStorage.setItem(VIEWER_KEY, JSON.stringify(v));
     localStorage.setItem(SESSION_KEY, sessionToken);
+    localStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
     setViewer(v);
     return v;
   };
