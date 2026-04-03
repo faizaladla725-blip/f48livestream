@@ -4,8 +4,6 @@ import { getDeviceId } from '@/lib/deviceId';
 
 const VIEWER_KEY = 'four48_viewer';
 const SESSION_KEY = 'four48_session';
-const LOGIN_TIME_KEY = 'four48_login_time';
-const AUTO_LOGOUT_MS = 5 * 60 * 60 * 1000; // 5 hours
 
 interface Viewer {
   id: string;
