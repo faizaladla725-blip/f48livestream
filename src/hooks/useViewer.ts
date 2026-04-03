@@ -79,7 +79,6 @@ export function useViewer() {
       const v: Viewer = { id: existing.id, username, device_id: deviceId, session_token: sessionToken };
       localStorage.setItem(VIEWER_KEY, JSON.stringify(v));
       localStorage.setItem(SESSION_KEY, sessionToken);
-      localStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
       setViewer(v);
       return v;
     }
