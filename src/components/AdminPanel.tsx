@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar, Eye, Radio, Server } from 'lucide-react';
+import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar, Eye, Radio, Server, UserCircle } from 'lucide-react';
 import { AdminShowManager } from './AdminShowManager';
+import { AdminLineupManager } from './AdminLineupManager';
 
 interface StreamSetting {
   id: string;
@@ -28,7 +29,7 @@ interface Viewer {
 export function AdminPanel() {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [viewers, setViewers] = useState<Viewer[]>([]);
-  const [tab, setTab] = useState<'settings' | 'viewers' | 'shows'>('settings');
+  const [tab, setTab] = useState<'settings' | 'viewers' | 'shows' | 'lineup'>('settings');
   const [accessCode, setAccessCode] = useState('');
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export function AdminPanel() {
           })}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={tab === 'settings' ? 'default' : 'secondary'}
             onClick={() => setTab('settings')}
@@ -168,6 +169,14 @@ export function AdminPanel() {
             size="sm"
           >
             <Calendar className="w-4 h-4 mr-1.5" /> Shows
+          </Button>
+          <Button
+            variant={tab === 'lineup' ? 'default' : 'secondary'}
+            onClick={() => setTab('lineup')}
+            className="flex-1 font-heading rounded-xl h-10"
+            size="sm"
+          >
+            <UserCircle className="w-4 h-4 mr-1.5" /> Lineup
           </Button>
           <Button
             variant={tab === 'viewers' ? 'default' : 'secondary'}
@@ -274,6 +283,10 @@ export function AdminPanel() {
 
         {tab === 'shows' && (
           <AdminShowManager servers={servers.map(s => ({ id: s.id, server_name: s.server_name }))} />
+        )}
+
+        {tab === 'lineup' && (
+          <AdminLineupManager />
         )}
 
         {tab === 'viewers' && (

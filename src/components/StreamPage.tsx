@@ -6,6 +6,7 @@ import { ViewerInfo } from './ViewerInfo';
 import { ServerTabs } from './ServerTabs';
 import { ShowSchedule } from './ShowSchedule';
 import { RealtimeClock } from './RealtimeClock';
+import { MemberLineup } from './MemberLineup';
 import { LogOut, Settings, Tv, Calendar } from 'lucide-react';
 import { SpeedTest } from './SpeedTest';
 
@@ -105,6 +106,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
                 isLive={activeServer.is_live}
               />
               <ViewerInfo stream={{ serverName: activeServer.server_name, isLive: activeServer.is_live, maxViewers: (activeServer as any).max_viewers || 50 }} />
+              <MemberLineup />
             </>
           ) : (
             <div className="aspect-video bg-card/50 rounded-2xl flex items-center justify-center">
