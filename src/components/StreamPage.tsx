@@ -6,6 +6,7 @@ import { ViewerInfo } from './ViewerInfo';
 import { ServerTabs } from './ServerTabs';
 import { ShowSchedule } from './ShowSchedule';
 import { RealtimeClock } from './RealtimeClock';
+import { MemberLineup } from './MemberLineup';
 import { LogOut, Settings, Tv, Calendar } from 'lucide-react';
 import { SpeedTest } from './SpeedTest';
 
