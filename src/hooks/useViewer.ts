@@ -38,7 +38,6 @@ export function useViewer() {
           } else if (data?.session_token && storedSession && data.session_token !== storedSession) {
             localStorage.removeItem(VIEWER_KEY);
             localStorage.removeItem(SESSION_KEY);
-            localStorage.removeItem(LOGIN_TIME_KEY);
             setViewer(null);
           } else {
             setViewer(parsed);
