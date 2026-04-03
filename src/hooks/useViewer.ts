@@ -21,16 +21,6 @@ export function useViewer() {
   useEffect(() => {
     const stored = localStorage.getItem(VIEWER_KEY);
     const storedSession = localStorage.getItem(SESSION_KEY);
-    const loginTime = localStorage.getItem(LOGIN_TIME_KEY);
-
-    // Auto logout after 5 hours
-    if (loginTime && Date.now() - Number(loginTime) > AUTO_LOGOUT_MS) {
-      localStorage.removeItem(VIEWER_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(LOGIN_TIME_KEY);
-      setLoading(false);
-      return;
-    }
 
     if (stored) {
       const parsed = JSON.parse(stored);
