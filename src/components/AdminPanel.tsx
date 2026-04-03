@@ -285,6 +285,10 @@ export function AdminPanel() {
           <AdminShowManager servers={servers.map(s => ({ id: s.id, server_name: s.server_name }))} />
         )}
 
+        {tab === 'lineup' && (
+          <AdminLineupManager />
+        )}
+
         {tab === 'viewers' && (
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             {viewers.length === 0 && (
