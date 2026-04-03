@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar, Eye, Radio, Server } from 'lucide-react';
+import { LogOut, Users, Settings, Tv, Ban, ShieldCheck, KeyRound, Trash2, Calendar, Eye, Radio, Server, UserCircle } from 'lucide-react';
 import { AdminShowManager } from './AdminShowManager';
+import { AdminLineupManager } from './AdminLineupManager';
 
 interface StreamSetting {
   id: string;
