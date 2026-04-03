@@ -74,6 +74,7 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
               </div>
               <span className="text-[10px] text-foreground font-medium max-w-[60px] truncate">{username}</span>
             </div>
+            <SpeedTest />
             <button
               onClick={() => setShowSchedule(!showSchedule)}
               className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${showSchedule ? 'bg-primary/20 text-primary' : 'bg-secondary/30 text-muted-foreground hover:text-foreground'}`}
