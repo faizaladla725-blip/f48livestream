@@ -153,7 +153,7 @@ export function AdminPanel() {
           })}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={tab === 'settings' ? 'default' : 'secondary'}
             onClick={() => setTab('settings')}
@@ -169,6 +169,14 @@ export function AdminPanel() {
             size="sm"
           >
             <Calendar className="w-4 h-4 mr-1.5" /> Shows
+          </Button>
+          <Button
+            variant={tab === 'lineup' ? 'default' : 'secondary'}
+            onClick={() => setTab('lineup')}
+            className="flex-1 font-heading rounded-xl h-10"
+            size="sm"
+          >
+            <UserCircle className="w-4 h-4 mr-1.5" /> Lineup
           </Button>
           <Button
             variant={tab === 'viewers' ? 'default' : 'secondary'}
