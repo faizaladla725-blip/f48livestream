@@ -4,8 +4,6 @@ import { getDeviceId } from '@/lib/deviceId';
 
 const VIEWER_KEY = 'four48_viewer';
 const SESSION_KEY = 'four48_session';
-const LOGIN_TIME_KEY = 'four48_login_time';
-const AUTO_LOGOUT_MS = 5 * 60 * 60 * 1000; // 5 hours
 
 interface Viewer {
   id: string;
@@ -23,16 +21,6 @@ export function useViewer() {
   useEffect(() => {
     const stored = localStorage.getItem(VIEWER_KEY);
     const storedSession = localStorage.getItem(SESSION_KEY);
-    const loginTime = localStorage.getItem(LOGIN_TIME_KEY);
-
-    // Auto logout after 5 hours
-    if (loginTime && Date.now() - Number(loginTime) > AUTO_LOGOUT_MS) {
-      localStorage.removeItem(VIEWER_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(LOGIN_TIME_KEY);
-      setLoading(false);
-      return;
-    }
 
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -46,12 +34,10 @@ export function useViewer() {
             setBanned(true);
             localStorage.removeItem(VIEWER_KEY);
             localStorage.removeItem(SESSION_KEY);
-            localStorage.removeItem(LOGIN_TIME_KEY);
             setViewer(null);
           } else if (data?.session_token && storedSession && data.session_token !== storedSession) {
             localStorage.removeItem(VIEWER_KEY);
             localStorage.removeItem(SESSION_KEY);
-            localStorage.removeItem(LOGIN_TIME_KEY);
             setViewer(null);
           } else {
             setViewer(parsed);
@@ -63,20 +49,6 @@ export function useViewer() {
     }
   }, []);
 
-  // Auto-logout timer
-  useEffect(() => {
-    if (!viewer) return;
-    const loginTime = Number(localStorage.getItem(LOGIN_TIME_KEY) || Date.now());
-    const remaining = AUTO_LOGOUT_MS - (Date.now() - loginTime);
-    if (remaining <= 0) {
-      logout();
-      return;
-    }
-    const timer = setTimeout(() => {
-      logout();
-    }, remaining);
-    return () => clearTimeout(timer);
-  }, [viewer]);
 
   const login = async (username: string) => {
     const deviceId = getDeviceId();
@@ -107,7 +79,6 @@ export function useViewer() {
       const v: Viewer = { id: existing.id, username, device_id: deviceId, session_token: sessionToken };
       localStorage.setItem(VIEWER_KEY, JSON.stringify(v));
       localStorage.setItem(SESSION_KEY, sessionToken);
-      localStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
       setViewer(v);
       return v;
     }
@@ -123,7 +94,6 @@ export function useViewer() {
     const v: Viewer = { id: data.id, username: data.username, device_id: data.device_id, session_token: sessionToken };
     localStorage.setItem(VIEWER_KEY, JSON.stringify(v));
     localStorage.setItem(SESSION_KEY, sessionToken);
-    localStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
     setViewer(v);
     return v;
   };
@@ -138,7 +108,6 @@ export function useViewer() {
     }
     localStorage.removeItem(VIEWER_KEY);
     localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(LOGIN_TIME_KEY);
     setViewer(null);
   };
 
