@@ -53,6 +53,36 @@ export type Database = {
           },
         ]
       }
+      lineup_members: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          photo_url: string | null
+          position: string | null
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          photo_url?: string | null
+          position?: string | null
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          photo_url?: string | null
+          position?: string | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
       shows: {
         Row: {
           access_token: string
