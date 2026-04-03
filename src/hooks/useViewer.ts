@@ -49,20 +49,6 @@ export function useViewer() {
     }
   }, []);
 
-  // Auto-logout timer
-  useEffect(() => {
-    if (!viewer) return;
-    const loginTime = Number(localStorage.getItem(LOGIN_TIME_KEY) || Date.now());
-    const remaining = AUTO_LOGOUT_MS - (Date.now() - loginTime);
-    if (remaining <= 0) {
-      logout();
-      return;
-    }
-    const timer = setTimeout(() => {
-      logout();
-    }, remaining);
-    return () => clearTimeout(timer);
-  }, [viewer]);
 
   const login = async (username: string) => {
     const deviceId = getDeviceId();
