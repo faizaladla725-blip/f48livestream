@@ -29,7 +29,7 @@ interface Viewer {
 export function AdminPanel() {
   const [servers, setServers] = useState<StreamSetting[]>([]);
   const [viewers, setViewers] = useState<Viewer[]>([]);
-  const [tab, setTab] = useState<'settings' | 'viewers' | 'shows'>('settings');
+  const [tab, setTab] = useState<'settings' | 'viewers' | 'shows' | 'lineup'>('settings');
   const [accessCode, setAccessCode] = useState('');
 
   useEffect(() => {
