@@ -7,7 +7,7 @@ import { ServerTabs } from './ServerTabs';
 import { ShowSchedule } from './ShowSchedule';
 import { RealtimeClock } from './RealtimeClock';
 import { MemberLineup } from './MemberLineup';
-import { LogOut, Settings, Tv, Calendar } from 'lucide-react';
+import { LogOut, Settings, Radio, Calendar, Zap } from 'lucide-react';
 import { SpeedTest } from './SpeedTest';
 
 interface StreamSetting {
@@ -38,7 +38,11 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
       const { data } = await supabase.from('stream_settings').select('*').order('server_name');
       if (data && data.length > 0) {
         setServers(data as StreamSetting[]);
-        if (!activeServerId) setActiveServerId(data[0].id);
+        if (!activeServerId) {
+          // Auto-select first LIVE server, fallback to first server
+          const liveServer = data.find((s: any) => s.is_live);
+          setActiveServerId(liveServer ? liveServer.id : data[0].id);
+        }
       }
     };
 
@@ -57,44 +61,52 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/30">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center border border-primary/15">
-              <Tv className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <span className="text-sm font-heading font-bold text-foreground">F48</span>
-          </div>
-
-          <RealtimeClock />
-
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 bg-secondary/30 rounded-full px-2 py-1">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center border border-primary/20">
-                <span className="text-[8px] font-bold text-primary">{username[0]?.toUpperCase()}</span>
+        {/* Header - Glassmorphism */}
+        <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/80 border-b border-border/20">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Brand */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <Radio className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="text-[10px] text-foreground font-medium max-w-[60px] truncate">{username}</span>
+              <div>
+                <span className="text-sm font-heading font-bold text-foreground tracking-tight">F48</span>
+                <span className="text-[9px] text-primary font-medium ml-1.5 bg-primary/10 px-1.5 py-0.5 rounded-full">LIVE</span>
+              </div>
             </div>
-            <SpeedTest />
-            <button
-              onClick={() => setShowSchedule(!showSchedule)}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${showSchedule ? 'bg-primary/20 text-primary' : 'bg-secondary/30 text-muted-foreground hover:text-foreground'}`}
-            >
-              <Calendar className="w-3 h-3" />
-            </button>
-            {onAdminClick && (
-              <button onClick={onAdminClick} className="w-7 h-7 rounded-lg bg-secondary/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                <Settings className="w-3 h-3" />
+
+            {/* Clock */}
+            <RealtimeClock />
+
+            {/* Actions */}
+            <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 bg-card/60 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-border/20">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-primary-foreground">{username[0]?.toUpperCase()}</span>
+                </div>
+                <span className="text-[10px] text-foreground font-medium max-w-[50px] truncate">{username}</span>
+              </div>
+              <SpeedTest />
+              <button
+                onClick={() => setShowSchedule(!showSchedule)}
+                className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${showSchedule ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-card/60 text-muted-foreground hover:text-foreground border border-border/20'}`}
+              >
+                <Calendar className="w-3 h-3" />
               </button>
-            )}
-            <button onClick={onLogout} className="w-7 h-7 rounded-lg bg-secondary/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-              <LogOut className="w-3 h-3" />
-            </button>
+              {onAdminClick && (
+                <button onClick={onAdminClick} className="w-7 h-7 rounded-xl bg-card/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border/20">
+                  <Settings className="w-3 h-3" />
+                </button>
+              )}
+              <button onClick={onLogout} className="w-7 h-7 rounded-xl bg-card/60 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors border border-border/20">
+                <LogOut className="w-3 h-3" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Main content */}
-        <div className="px-3 pt-2 pb-4 space-y-2.5">
+        <div className="px-3 pt-3 pb-6 space-y-3">
           <ServerTabs servers={servers} activeServer={activeServerId} onServerChange={setActiveServerId} />
 
           {activeServer ? (
@@ -109,8 +121,11 @@ export function StreamPage({ viewerId, username, onLogout, onAdminClick, isAdmin
               <MemberLineup />
             </>
           ) : (
-            <div className="aspect-video bg-card/50 rounded-2xl flex items-center justify-center">
-              <Tv className="w-6 h-6 text-muted-foreground/30" />
+            <div className="aspect-video bg-card/30 rounded-2xl flex flex-col items-center justify-center gap-3 border border-border/20">
+              <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                <Radio className="w-7 h-7 text-muted-foreground/30" />
+              </div>
+              <p className="text-muted-foreground text-xs font-heading">No Server Available</p>
             </div>
           )}
 
