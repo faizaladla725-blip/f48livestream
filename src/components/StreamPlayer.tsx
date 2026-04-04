@@ -18,17 +18,18 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPip, setIsPip] = useState(false);
   const [volume, setVolume] = useState(80);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [hlsLevels, setHlsLevels] = useState<{ index: number; height: number }[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true); // Show controls initially
+  const [isPlaying, setIsPlaying] = useState(false);
   const controlsTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const iframeSrc = useMemo(() => {
     if (!videoId) return '';
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1&origin=${window.location.origin}`;
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&controls=0&fs=0&playsinline=1&cc_load_policy=0&disablekb=1&origin=${window.location.origin}`;
   }, [videoId]);
 
   // HLS setup
@@ -50,19 +51,23 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       hls.loadSource(m3u8Url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        video.play().catch(() => {});
+        video.muted = true; // Ensure muted for autoplay
+        video.play().then(() => setIsPlaying(true)).catch(() => {});
         setHlsLevels(data.levels.map((l, i) => ({ index: i, height: l.height })));
       });
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setCurrentLevel(data.level));
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) setTimeout(() => hls.startLoad(), 1000);
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) setTimeout(() => hls.startLoad(), 2000);
           else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = m3u8Url;
-      video.addEventListener('loadedmetadata', () => video.play().catch(() => {}));
+      video.muted = true;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().then(() => setIsPlaying(true)).catch(() => {});
+      });
     }
 
     return () => {
@@ -71,9 +76,10 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
     };
   }, [m3u8Url, streamType]);
 
+  // Apply volume changes
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.volume = isMuted ? 0 : volume / 100;
+      videoRef.current.volume = volume / 100;
       videoRef.current.muted = isMuted;
     }
   }, [volume, isMuted]);
@@ -124,6 +130,14 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
     controlsTimeout.current = setTimeout(() => setShowControls(false), 3000);
   }, []);
 
+  const handleUnmute = useCallback(() => {
+    setIsMuted(false);
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
   const hasStream = streamType === 'youtube' ? !!videoId : !!m3u8Url;
 
   if (!isLive || !hasStream) {
@@ -154,7 +168,18 @@ export function StreamPlayer({ youtubeUrl, m3u8Url, streamType = 'youtube', isLi
       {streamType === 'youtube' && videoId ? (
         <iframe src={iframeSrc} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Live Stream" />
       ) : (
-        <video ref={videoRef} className="w-full h-full object-contain bg-black" playsInline autoPlay muted={isMuted} />
+        <video ref={videoRef} className="w-full h-full object-contain bg-black" playsInline autoPlay muted />
+      )}
+
+      {/* Unmute overlay - shows when muted and playing */}
+      {isMuted && isPlaying && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleUnmute(); }}
+          className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-card/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-border/20 text-foreground hover:bg-card transition-colors"
+        >
+          <VolumeX className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[10px] font-heading font-semibold">Tap untuk unmute</span>
+        </button>
       )}
 
       {/* Watermark */}
